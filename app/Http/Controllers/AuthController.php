@@ -90,46 +90,42 @@ class AuthController extends Controller
 
 
     /**
-     * @OA\Post (
+     * @OA\Post(
      *     path="/api/auth/register",
-     *     tags={"Auth"},
      *     summary="Register",
+     *     tags={"Auth"},
      *     operationId="Register",
-     *     @OA\Parameter (
-     *      name="name",
-     *      in="query",
-     *      required=true,
-     *      @OA\Schema (
-     *          type="string"
-     *      )
+     *      @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="name",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="email",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="password",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="password_confirmation",
+     *                     type="string"
+     *                 ),
+     *                  @OA\Property(
+     *                     property="Image",
+     *                     type="file"
+     *                 ),
+     *             )
+     *         )
      *     ),
-     *     @OA\Parameter (
-     *      name="email",
-     *      in="query",
-     *      required=true,
-     *      @OA\Schema (
-     *          type="string"
-     *      )
-     *     ),
-     *     @OA\Parameter (
-     *      name="password",
-     *      in="query",
-     *     required=true,
-     *     @OA\Schema (
-     *     type="string"
-     *      )
-     *      ),
-     *     @OA\Parameter (
-     *      name="password_confirmation",
-     *      in="query",
-     *     required=true,
-     *     @OA\Schema (
-     *     type="string"
-     *      )
-     *      ),
+     *
      *     @OA\Response(
      *     response="200",
-     *     description="Good register"
+     *     description="ok"
      * )
      * )
      */
@@ -149,14 +145,25 @@ class AuthController extends Controller
             return response()->json($validator->errors()->toJson(), 400);
         }
 
+        $filename = "";
+        if(!empty($_FILES))
+        {
+            $extension = pathinfo($_FILES['Image']['name'], PATHINFO_EXTENSION);
+            $filename = uniqid() . ".{$extension}";
+
+            $dir = $_SERVER['DOCUMENT_ROOT'] . '/images/' . $filename;
+            move_uploaded_file($_FILES['Image']['tmp_name'], $dir);
+        }
+
         $user = User::create(array_merge(
             $validator->validated(),
-            ['password' => bcrypt($request->password)]
+            ['password' => bcrypt($request->password),'image' => $filename]
         ));
 
         return response()->json([
             'message' => 'User successfully registered',
-            'user' => $user
+            'user' => $user,
+
         ], 201);
     }
 
@@ -176,6 +183,8 @@ class AuthController extends Controller
      *     @OA\Response (
      *     response="200",
      *     description="Logout good"
+     * @OA\MediaType (
+     *     mediaType="application/json"
      * )
      * )
      */
