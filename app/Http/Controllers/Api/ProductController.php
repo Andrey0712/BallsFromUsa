@@ -30,6 +30,14 @@ class ProductController extends Controller
      *           type="string"
      *      )
      *   ),
+     *     @OA\Parameter(
+     *      name="description",
+     *      in="query",
+     *      required=false,
+     *      @OA\Schema(
+     *          type="string"
+     *      )
+     *   ),
      *     @OA\Response(response="200", description="List Products.")
      * )
      */
@@ -45,6 +53,13 @@ class ProductController extends Controller
         if(!empty($name))
         {
             $products = Product::where('name','LIKE', '%'.$name.'%')->paginate(2);// ::all();\
+            return response()->json($products);
+
+        }
+        $description = isset($input["description"]) ? $input["description"] : "";
+        if(!empty($description))
+        {
+            $products = Product::where('description','LIKE', '%'.$description.'%')->paginate(2);// ::all();\
             return response()->json($products);
 
         }
